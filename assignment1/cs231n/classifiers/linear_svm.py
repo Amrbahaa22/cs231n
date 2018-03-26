@@ -76,18 +76,18 @@ def svm_loss_vectorized(W, X, y, reg):
   # Implement a vectorized version of the structured SVM loss, storing the    #
   # result in loss.                                                           #
   #############################################################################
-  scores = X.dot(W)
+  scores = np.dot(X,W)
   delta=1
-    # read correct scores into a column array of height N
+ 
 	
-  correct_Score_Class = scores[range(num_train), y]
+  correct_Score_Class = scores[np.arange(num_train), y]
   correct_Score_Class = np.reshape(correct_Score_Class,(num_train, -1))
-    # subtract correct scores from score matrix and add margin
+    # sum up margins and subtracted correct class scores 
   scores += delta - correct_Score_Class
-    # make sure correct scores themselves don't contribute to loss function
-  scores[range(num_train), y] = 0
-    # construct loss function
-  loss /= np.sum(np.maximum(scores, 0))
+    
+  scores[np.arange(num_train), y] = 0
+    #formula of loss function , we sum up and divide it in num_train and add regularization at the end to the loss 
+  loss = np.sum(np.argmax(scores, 0))/num_train
   loss += 0.5*reg * np.sum(W **2)
 
 
@@ -108,19 +108,20 @@ def svm_loss_vectorized(W, X, y, reg):
   
   Pos_indices = np.zeros(scores.shape)
   #find the count of the class that has positve indices(i compress the code without appropriate it to additional variable)
-  #margin
+  #give one to positive indices of score
   Pos_indices[scores > 0] = 1
- 
-  incorrect_class=np.sum(Pos_indices,axis=1)
+ #sume positive indices up to the incorrect_classes and employ gd
+  sum_mask=np.sum(Pos_indices,axis=1)
   dW=X.T.dot(Pos_indices)
-  Pos_indices[range(num_train), y] = incorrect_class* (-1)
+  Pos_indices[range(num_train), y] = sum_mask* (-1)
   dW += X.T.dot(Pos_indices)
-  #calculate the mean of th weight
+
   dW /= num_train
   dW += 2 * reg * W
 
   #########################################################W####################
   #                             END OF YOUR CODE                              #
   #############################################################################
- 
+
   return loss, dW
+
